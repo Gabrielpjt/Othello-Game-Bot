@@ -133,38 +133,44 @@ class OthelloGUI:
                     self.invalid_play_sound.play()  # Play invalid play sound effect
 
     def run_game(self, return_to_menu_callback=None):
-        """
-        Run the main game loop until the game is over and display the result.
-        """
-        while not self.game.is_game_over():
-            self.handle_input()
+      """
+      Run the main game loop until the game is over and display the result.
+      """
+      while not self.game.is_game_over():
+          self.handle_input()
 
-            # If it's the AI player's turn
-            if self.game.player_mode == "ai" and self.game.current_player == -1:
-                self.message = "AI is thinking..."
-                self.draw_board()  # Display the thinking message
-                ai_move = get_best_move(self.game)
-                pygame.time.delay(500)  # Wait for a short time to show the message
-                self.game.make_move(*ai_move)
+          # If it's the AI player's turn
+          if self.game.player_mode == "ai" and self.game.current_player == -1:
+              self.message = "AI is thinking..."
+              self.draw_board()  # Display the thinking message
+              ai_move = get_best_move(self.game)
+              pygame.time.delay(500)  # Wait for a short time to show the message
 
-            self.message = ""  # Clear any previous messages
-            self.draw_board()
+              # Check if ai_move is valid (i.e., not None)
+              if ai_move is not None:
+                  self.game.make_move(*ai_move)
+              else:
+                  self.message = "AI cannot make a move!"
 
-        winner = self.game.get_winner()
-        if winner == 1:
-            self.message = "Black wins!"
-        elif winner == -1:
-            self.message = "White wins!"
-        else:
-            self.message = "It's a tie!"
+          self.message = ""  # Clear any previous messages
+          self.draw_board()
 
-        self.draw_board()
-        self.end_game_sound.play()  # Play end game sound effect
-        pygame.time.delay(3000)  # Display the result for 2 seconds before returning
+      winner = self.game.get_winner()
+      if winner == 1:
+          self.message = "Black wins!"
+      elif winner == -1:
+          self.message = "White wins!"
+      else:
+          self.message = "It's a tie!"
 
-        # Call the return_to_menu_callback if provided
-        if return_to_menu_callback:
-            return_to_menu_callback()
+      self.draw_board()
+      self.end_game_sound.play()  # Play end game sound effect
+      pygame.time.delay(3000)  # Display the result for 2 seconds before returning
+
+      # Call the return_to_menu_callback if provided
+      if return_to_menu_callback:
+          return_to_menu_callback()
+
 
 
 def run_game():

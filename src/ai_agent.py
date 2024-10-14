@@ -1,40 +1,31 @@
 from othello_game import OthelloGame
 
-
 def get_best_move(game, max_depth=8):
     """
     Given the current game state, this function returns the best move for the AI player using the Alpha-Beta Pruning
     algorithm with a specified maximum search depth.
-
-    Parameters:
-        game (OthelloGame): The current game state.
-        max_depth (int): The maximum search depth for the Alpha-Beta algorithm.
-
-    Returns:
-        tuple: A tuple containing the evaluation value of the best move and the corresponding move (row, col).
     """
+    valid_moves = game.get_valid_moves()
+
+    if not valid_moves:
+        return None  # No valid moves available
+
     _, best_move = alphabeta(game, max_depth)
     return best_move
 
 
-def alphabeta(
-    game, max_depth, maximizing_player=True, alpha=float("-inf"), beta=float("inf")
-):
+def alphabeta(game, depth, maximizing_player=True, alpha=float("-inf"), beta=float("inf"), cache={}):
     """
     Alpha-Beta Pruning algorithm for selecting the best move for the AI player.
-
-    Parameters:
-        game (OthelloGame): The current game state.
-        max_depth (int): The maximum search depth for the Alpha-Beta algorithm.
-        maximizing_player (bool): True if maximizing player (AI), False if minimizing player (opponent).
-        alpha (float): The alpha value for pruning. Defaults to negative infinity.
-        beta (float): The beta value for pruning. Defaults to positive infinity.
-
-    Returns:
-        tuple: A tuple containing the evaluation value of the best move and the corresponding move (row, col).
     """
-    if max_depth == 0 or game.is_game_over():
+    game_state_key = tuple(map(tuple, game.board))  # Convert board to tuple for caching
+
+    if depth == 0 or game.is_game_over():
         return evaluate_game_state(game), None
+
+    # Use cached evaluation if available
+    if game_state_key in cache:
+        return cache[game_state_key]
 
     valid_moves = game.get_valid_moves()
 
@@ -42,13 +33,17 @@ def alphabeta(
         max_eval = float("-inf")
         best_move = None
 
-        for move in valid_moves:
-            new_game = OthelloGame(player_mode=game.player_mode)
-            new_game.board = [row[:] for row in game.board]
-            new_game.current_player = game.current_player
-            new_game.make_move(*move)
+        for move in sorted(valid_moves, key=lambda mv: heuristic_sort(game, mv), reverse=True):
+            # Make move in place
+            original_board = [row[:] for row in game.board]
+            game.make_move(*move)
 
-            eval, _ = alphabeta(new_game, max_depth - 1, False, alpha, beta)
+            eval, _ = alphabeta(game, depth - 1, False, alpha, beta, cache)
+            eval = eval[0] if isinstance(eval, tuple) else eval  # Ensure eval is not a tuple
+
+            # Undo the move
+            game.board = original_board
+            game.current_player *= -1  # Revert player
 
             if eval > max_eval:
                 max_eval = eval
@@ -58,18 +53,24 @@ def alphabeta(
             if beta <= alpha:
                 break
 
+        cache[game_state_key] = (max_eval, best_move)
         return max_eval, best_move
+
     else:
         min_eval = float("inf")
         best_move = None
 
-        for move in valid_moves:
-            new_game = OthelloGame(player_mode=game.player_mode)
-            new_game.board = [row[:] for row in game.board]
-            new_game.current_player = game.current_player
-            new_game.make_move(*move)
+        for move in sorted(valid_moves, key=lambda mv: heuristic_sort(game, mv)):
+            # Make move in place
+            original_board = [row[:] for row in game.board]
+            game.make_move(*move)
 
-            eval, _ = alphabeta(new_game, max_depth - 1, True, alpha, beta)
+            eval, _ = alphabeta(game, depth - 1, True, alpha, beta, cache)
+            eval = eval[0] if isinstance(eval, tuple) else eval  # Ensure eval is not a tuple
+
+            # Undo the move
+            game.board = original_board
+            game.current_player *= -1  # Revert player
 
             if eval < min_eval:
                 min_eval = eval
@@ -79,100 +80,55 @@ def alphabeta(
             if beta <= alpha:
                 break
 
+        cache[game_state_key] = (min_eval, best_move)
         return min_eval, best_move
 
+def heuristic_sort(game, move):
+    """
+    Heuristic to prioritize good moves first, such as corner moves.
+    """
+    row, col = move
+    # Prioritize corner moves or edge moves
+    if (row, col) in [(0, 0), (0, 7), (7, 0), (7, 7)]:
+        return 100  # Highest priority for corners
+    if row == 0 or row == 7 or col == 0 or col == 7:
+        return 10  # Priority for edges
+    return 0  # Default for other moves
 
 def evaluate_game_state(game):
     """
-    Evaluates the current game state for the AI player.
-
-    Parameters:
-        game (OthelloGame): The current game state.
-
-    Returns:
-        float: The evaluation value representing the desirability of the game state for the AI player.
+    Evaluates the current game state for the AI player based on various factors like coin parity, mobility, and corner/edge occupancy.
     """
-    # Evaluation weights for different factors
     coin_parity_weight = 1.0
     mobility_weight = 2.0
-    corner_occupancy_weight = 5.0
-    stability_weight = 3.0
-    edge_occupancy_weight = 2.5
+    corner_weight = 5.0
+    edge_weight = 2.0
 
-    # Coin parity (difference in disk count)
-    player_disk_count = sum(row.count(game.current_player) for row in game.board)
-    opponent_disk_count = sum(row.count(-game.current_player) for row in game.board)
-    coin_parity = player_disk_count - opponent_disk_count
+    player = game.current_player
+    opponent = -game.current_player
 
-    # Mobility (number of valid moves for the current player)
-    player_valid_moves = len(game.get_valid_moves())
-    opponent_valid_moves = len(
-        OthelloGame(player_mode=-game.current_player).get_valid_moves()
-    )
-    mobility = player_valid_moves - opponent_valid_moves
+    # Coin parity
+    player_count = sum(row.count(player) for row in game.board)
+    opponent_count = sum(row.count(opponent) for row in game.board)
+    coin_parity = (player_count - opponent_count) * coin_parity_weight
 
-    # Corner occupancy (number of player disks in the corners)
-    corner_occupancy = sum(
-        game.board[i][j] for i, j in [(0, 0), (0, 7), (7, 0), (7, 7)]
-    )
+    # Mobility
+    player_moves = len(game.get_valid_moves())
+    opponent_moves = len(OthelloGame(player_mode=opponent).get_valid_moves())
+    mobility = (player_moves - opponent_moves) * mobility_weight
 
-    # Stability (number of stable disks)
-    stability = calculate_stability(game)
-
-    # Edge occupancy (number of player disks on the edges)
-    edge_occupancy = sum(game.board[i][j] for i in [0, 7] for j in range(1, 7)) + sum(
-        game.board[i][j] for i in range(1, 7) for j in [0, 7]
-    )
-
-    # Combine the factors with the corresponding weights to get the final evaluation value
-    evaluation = (
-        coin_parity * coin_parity_weight
-        + mobility * mobility_weight
-        + corner_occupancy * corner_occupancy_weight
-        + stability * stability_weight
-        + edge_occupancy * edge_occupancy_weight
-    )
-
-    return evaluation
-
-
-def calculate_stability(game):
-    """
-    Calculates the stability of the AI player's disks on the board.
-
-    Parameters:
-        game (OthelloGame): The current game state.
-
-    Returns:
-        int: The number of stable disks for the AI player.
-    """
-
-    def neighbors(row, col):
-        return [
-            (row + dr, col + dc)
-            for dr in [-1, 0, 1]
-            for dc in [-1, 0, 1]
-            if (dr, dc) != (0, 0) and 0 <= row + dr < 8 and 0 <= col + dc < 8
-        ]
-
+    # Corners
     corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
-    edges = [(i, j) for i in [0, 7] for j in range(1, 7)] + [
-        (i, j) for i in range(1, 7) for j in [0, 7]
-    ]
-    inner_region = [(i, j) for i in range(2, 6) for j in range(2, 6)]
-    regions = [corners, edges, inner_region]
+    player_corners = sum(1 for (r, c) in corners if game.board[r][c] == player)
+    opponent_corners = sum(1 for (r, c) in corners if game.board[r][c] == opponent)
+    corner_occupancy = (player_corners - opponent_corners) * corner_weight
 
-    stable_count = 0
+    # Edge occupancy
+    edges = [(i, j) for i in [0, 7] for j in range(1, 7)] + [(i, j) for i in range(1, 7) for j in [0, 7]]
+    player_edges = sum(1 for (r, c) in edges if game.board[r][c] == player)
+    opponent_edges = sum(1 for (r, c) in edges if game.board[r][c] == opponent)
+    edge_occupancy = (player_edges - opponent_edges) * edge_weight
 
-    def is_stable_disk(row, col):
-        return (
-            all(game.board[r][c] == game.current_player for r, c in neighbors(row, col))
-            or (row, col) in edges + corners
-        )
-
-    for region in regions:
-        for row, col in region:
-            if game.board[row][col] == game.current_player and is_stable_disk(row, col):
-                stable_count += 1
-
-    return stable_count
+    # Final evaluation
+    evaluation = coin_parity + mobility + corner_occupancy + edge_occupancy
+    return evaluation

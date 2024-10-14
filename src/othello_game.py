@@ -15,45 +15,46 @@ class OthelloGame:
         self.player_mode = player_mode
 
     def is_valid_move(self, row, col):
-        """
-        Check if the move is valid and results in flipping opponent disks.
+      """
+      Check if the move is valid and results in flipping opponent disks.
 
-        Args:
-            row (int): The row index of the move.
-            col (int): The column index of the move.
+      Args:
+          row (int): The row index of the move.
+          col (int): The column index of the move.
 
-        Returns:
-            bool: True if the move is valid and flips opponent disks, False otherwise.
-        """
-        if self.board[row][col] != 0:
-            return False
+      Returns:
+          bool: True if the move is valid and flips opponent disks, False otherwise.
+      """
+      # First, ensure the move is within the board boundaries
+      if not (0 <= row < 8 and 0 <= col < 8):
+          return False
 
-        # Check in all eight directions for opponent disks to flip
-        directions = [
-            (-1, -1),
-            (-1, 0),
-            (-1, 1),
-            (0, -1),
-            (0, 1),
-            (1, -1),
-            (1, 0),
-            (1, 1),
-        ]
-        for dr, dc in directions:
-            r, c = row + dr, col + dc
-            while (
-                0 <= r < 8 and 0 <= c < 8 and self.board[r][c] == -self.current_player
-            ):
-                r += dr
-                c += dc
-                if (
-                    0 <= r < 8
-                    and 0 <= c < 8
-                    and self.board[r][c] == self.current_player
-                ):
-                    return True
+      if self.board[row][col] != 0:
+          return False
 
-        return False
+      # Check in all eight directions for opponent disks to flip
+      directions = [
+          (-1, -1), (-1, 0), (-1, 1),
+          (0, -1),         (0, 1),
+          (1, -1), (1, 0), (1, 1),
+      ]
+      for dr, dc in directions:
+          r, c = row + dr, col + dc
+          # Make sure the first step is within bounds and is an opponent's disk
+          if 0 <= r < 8 and 0 <= c < 8 and self.board[r][c] == -self.current_player:
+              # Continue checking in this direction
+              r += dr
+              c += dc
+              while 0 <= r < 8 and 0 <= c < 8:
+                  if self.board[r][c] == self.current_player:
+                      return True
+                  if self.board[r][c] == 0:
+                      break
+                  r += dr
+                  c += dc
+
+      return False
+
 
     def flip_disks(self, row, col):
         """
