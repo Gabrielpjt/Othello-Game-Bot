@@ -1,4 +1,7 @@
 from othello_game import OthelloGame
+from Stoppage import Stoppage
+import threading
+import logging
 
 def get_best_move(game, max_depth=8):
     """
@@ -9,12 +12,16 @@ def get_best_move(game, max_depth=8):
 
     if not valid_moves:
         return None  # No valid moves available
+    
+    stoppage = Stoppage()
+    thread = threading.Thread(target=stoppage.startCount)
 
-    _, best_move = alphabeta(game, max_depth)
+    thread.start()
+    _, best_move = alphabeta(game ,max_depth, stoppage)
     return best_move
 
 
-def alphabeta(game, depth, maximizing_player=True, alpha=float("-inf"), beta=float("inf"), cache={}):
+def alphabeta(game, depth, stoppage, maximizing_player=True, alpha=float("-inf"), beta=float("inf"), cache={}):
     """
     Alpha-Beta Pruning algorithm for selecting the best move for the AI player.
     """
@@ -30,15 +37,18 @@ def alphabeta(game, depth, maximizing_player=True, alpha=float("-inf"), beta=flo
     valid_moves = game.get_valid_moves()
 
     if maximizing_player:
+
         max_eval = float("-inf")
         best_move = None
 
         for move in sorted(valid_moves, key=lambda mv: heuristic_sort(game, mv), reverse=True):
+            if stoppage.isStop():
+                break
             # Make move in place
             original_board = [row[:] for row in game.board]
             game.make_move(*move)
 
-            eval, _ = alphabeta(game, depth - 1, False, alpha, beta, cache)
+            eval, _ = alphabeta(game,depth - 1, stoppage, False, alpha, beta, cache)
             eval = eval[0] if isinstance(eval, tuple) else eval  # Ensure eval is not a tuple
 
             # Undo the move
@@ -61,11 +71,13 @@ def alphabeta(game, depth, maximizing_player=True, alpha=float("-inf"), beta=flo
         best_move = None
 
         for move in sorted(valid_moves, key=lambda mv: heuristic_sort(game, mv)):
+            if stoppage.isStop():
+                break
             # Make move in place
             original_board = [row[:] for row in game.board]
             game.make_move(*move)
 
-            eval, _ = alphabeta(game, depth - 1, True, alpha, beta, cache)
+            eval, _ = alphabeta(game, depth - 1, stoppage, True, alpha, beta, cache)
             eval = eval[0] if isinstance(eval, tuple) else eval  # Ensure eval is not a tuple
 
             # Undo the move

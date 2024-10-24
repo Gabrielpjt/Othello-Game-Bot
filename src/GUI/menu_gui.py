@@ -30,7 +30,15 @@ class Menu:
         self.submenu_items = [
             "Multi-player\n(Play with Friend)",
             "Single-player\n(Play with AI)",
+            "AI vs AI",
             "Return to Main Menu",  # Add "Return to Main Menu" option
+        ]
+        self.ai_options = [
+            "Minimax-1",
+            "Minimax-2",
+            "Minimax-3",
+            "Simulated-Annealing",
+            "Genetic-Algorithm"
         ]
         self.return_button = None
         self.background_image = pygame.image.load(BACKGROUND_IMAGE_PATH)
@@ -79,6 +87,34 @@ class Menu:
         submenu_top_margin = (HEIGHT - submenu_height) // 2
 
         for i, item in enumerate(self.submenu_items):
+            button_y = submenu_top_margin + i * SUBMENU_SPACING
+            button = Button(
+                WIDTH // 2, button_y, 200, 30, item, self.menu_font
+            )  # Adjust height to 30
+            buttons.append(button)
+            button.draw(self.win)
+
+        pygame.display.update()
+        self.handle_input_submenu(buttons)
+
+    def draw_ai_options(self):
+        """
+        Draw the submenu on the Pygame window.
+        """
+
+        font = pygame.font.SysFont("Times New Roman", 30)
+        text = pygame.font.Font.render(font, "Choose AI", True, (100,100,100))
+        textRect = text.get_rect()
+        textRect.center = (WIDTH // 2, 20)
+        self.win.blit(self.background_image, (0, 0))  # Draw the background image
+        self.win.blit(text, textRect)
+
+        buttons = []
+        num_ai_options = len(self.ai_options)
+        submenu_height = num_ai_options * SUBMENU_SPACING
+        submenu_top_margin = (HEIGHT - submenu_height) // 2
+
+        for i, item in enumerate(self.ai_options):
             button_y = submenu_top_margin + i * SUBMENU_SPACING
             button = Button(
                 WIDTH // 2, button_y, 200, 30, item, self.menu_font
@@ -189,19 +225,23 @@ class Menu:
                     x, y = event.pos
                     for button in buttons:
                         if button.check_collision((x, y)):
-                            if button.text == "Multi-player\n(Play with Friend)":
-                                othello_gui = OthelloGUI()
-                                # Pass the draw_menu function as a callback to return to the main menu
-                                othello_gui.run_game(
-                                    return_to_menu_callback=self.draw_menu
-                                )
-
-                            elif button.text == "Single-player\n(Play with AI)":
+                            if button.text in ["Minimax-1" or "Minimax-2" or "Minimax-3" or "Simulated-Annealing" or "Genetic-Algorithm"]:
                                 othello_gui = OthelloGUI(player_mode="ai")
                                 # Pass the draw_menu function as a callback to return to the main menu
                                 othello_gui.run_game(
                                     return_to_menu_callback=self.draw_menu
                                 )
+                            elif button.text == "Multi-player\n(Play with Friend)":
+                                othello_gui = OthelloGUI()
+                                # Pass the draw_menu function as a callback to return to the main menu
+                                othello_gui.run_game(
+                                    return_to_menu_callback=self.draw_menu
+                                )
+                            elif button.text == "Single-player\n(Play with AI)":
+                                self.draw_ai_options()
+                                
+                            elif button.text == "AI vs AI":
+                                self.draw_ai_options()
 
                             elif button.text == "Return to Main Menu":
                                 self.draw_menu()  # Go back to the main menu
