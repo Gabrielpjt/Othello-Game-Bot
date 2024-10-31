@@ -2,6 +2,7 @@ import time
 
 class Stoppage: 
     stop = False
+    move = False
 
     def __init__(self) -> None:
         pass
@@ -12,6 +13,6 @@ class Stoppage:
 
 
     def isStop(self):
-        return self.stop    
+        return self.stop or self.move 
 
     

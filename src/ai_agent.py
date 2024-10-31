@@ -3,7 +3,29 @@ from Stoppage import Stoppage
 import threading
 import logging
 
-def get_best_move(game, max_depth=8):
+evaluation_params = {
+    "Minimax-1" : {
+        "coin_parity_weight" : 1.0,
+        "mobility_weight" : 2.0,
+        "corner_weight" : 5.0,
+        "edge_weight" : 2.0
+    },
+    "Minimax-2" : {
+        "coin_parity_weight" : 5.0,
+        "mobility_weight" : 10.0,
+        "corner_weight" : 1.0,
+        "edge_weight" : 0.5
+    },
+    "Minimax-3" : {
+        "coin_parity_weight" : 2.0,
+        "mobility_weight" : 1.0,
+        "corner_weight" : 5.0,
+        "edge_weight" : 5.0
+    }
+}
+
+
+def get_best_move(game, ai_agent_name ,max_depth=8):
     """
     Given the current game state, this function returns the best move for the AI player using the Alpha-Beta Pruning
     algorithm with a specified maximum search depth.
@@ -17,18 +39,19 @@ def get_best_move(game, max_depth=8):
     thread = threading.Thread(target=stoppage.startCount)
 
     thread.start()
-    _, best_move = alphabeta(game ,max_depth, stoppage)
+    _, best_move = alphabeta(game ,max_depth, stoppage, ai_agent_name)
+    thread.join()
     return best_move
 
 
-def alphabeta(game, depth, stoppage, maximizing_player=True, alpha=float("-inf"), beta=float("inf"), cache={}):
+def alphabeta(game, depth, stoppage, ai_agent_name ,maximizing_player=True, alpha=float("-inf"), beta=float("inf"), cache={}):
     """
     Alpha-Beta Pruning algorithm for selecting the best move for the AI player.
     """
     game_state_key = tuple(map(tuple, game.board))  # Convert board to tuple for caching
 
-    if depth == 0 or game.is_game_over():
-        return evaluate_game_state(game), None
+    if depth == 0 or game.is_game_over() or stoppage.isStop():
+        return evaluate_game_state(game, evaluation_params[ai_agent_name]), None
 
     # Use cached evaluation if available
     if game_state_key in cache:
@@ -42,13 +65,11 @@ def alphabeta(game, depth, stoppage, maximizing_player=True, alpha=float("-inf")
         best_move = None
 
         for move in sorted(valid_moves, key=lambda mv: heuristic_sort(game, mv), reverse=True):
-            if stoppage.isStop():
-                break
             # Make move in place
             original_board = [row[:] for row in game.board]
             game.make_move(*move)
 
-            eval, _ = alphabeta(game,depth - 1, stoppage, False, alpha, beta, cache)
+            eval, _ = alphabeta(game,depth - 1, stoppage, ai_agent_name ,False, alpha, beta, cache)
             eval = eval[0] if isinstance(eval, tuple) else eval  # Ensure eval is not a tuple
 
             # Undo the move
@@ -71,13 +92,11 @@ def alphabeta(game, depth, stoppage, maximizing_player=True, alpha=float("-inf")
         best_move = None
 
         for move in sorted(valid_moves, key=lambda mv: heuristic_sort(game, mv)):
-            if stoppage.isStop():
-                break
             # Make move in place
             original_board = [row[:] for row in game.board]
             game.make_move(*move)
 
-            eval, _ = alphabeta(game, depth - 1, stoppage, True, alpha, beta, cache)
+            eval, _ = alphabeta(game, depth - 1, stoppage, ai_agent_name, True, alpha, beta, cache)
             eval = eval[0] if isinstance(eval, tuple) else eval  # Ensure eval is not a tuple
 
             # Undo the move
@@ -107,14 +126,14 @@ def heuristic_sort(game, move):
         return 10  # Priority for edges
     return 0  # Default for other moves
 
-def evaluate_game_state(game):
+def evaluate_game_state(game, evaluation_params):
     """
     Evaluates the current game state for the AI player based on various factors like coin parity, mobility, and corner/edge occupancy.
     """
-    coin_parity_weight = 1.0
-    mobility_weight = 2.0
-    corner_weight = 5.0
-    edge_weight = 2.0
+    coin_parity_weight = evaluation_params["coin_parity_weight"]
+    mobility_weight = evaluation_params["mobility_weight"]
+    corner_weight = evaluation_params["corner_weight"]
+    edge_weight = evaluation_params["edge_weight"]
 
     player = game.current_player
     opponent = -game.current_player
