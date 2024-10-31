@@ -1,7 +1,8 @@
 import pygame
 import sys
 from othello_game import OthelloGame
-from ai_agent import get_best_move
+from ai_agent import ai_agent
+from ai_agent_genetic import ai_agent_genetic
 from Stoppage import Stoppage
 import threading
 import time
@@ -142,15 +143,30 @@ class OthelloGUI:
       """
       Run the main game loop until the game is over and display the result.
       """
+      if (ai_1=="Genetic Algorithm"):
+          bot_1 = ai_agent_genetic()
+      elif (ai_1=="Simulated Annealing"):
+          bot_1 = ai_agent_genetic()
+      else:
+          bot_1 = ai_agent()
+
+      if (ai_2=="Genetic Algorithm"):
+          bot_2 = ai_agent_genetic()
+      elif (ai_2=="Simulated Annealing"):
+          bot_2 = ai_agent_genetic()
+      else:
+          bot_2 = ai_agent()
       while not self.game.is_game_over():
           
           if ai_1!=None and ai_2!=None:
               self.message = "AI is thinking..."
               self.draw_board()  # Display the thinking message
               if self.game.current_player != -1:
-                ai_move = get_best_move(self.game, ai_1)
+                ai_move = bot_1.get_best_move(self.game, ai_1)
+                print(1)
               else:
-                ai_move = get_best_move(self.game, ai_2)
+                ai_move = bot_2.get_best_move(self.game, ai_2)
+                print(2)
 
               pygame.time.delay(500)  # Wait for a short time to show the message
 
@@ -181,7 +197,7 @@ class OthelloGUI:
             if self.game.player_mode == "ai" and self.game.current_player == -1:
                 self.message = "AI is thinking..."
                 self.draw_board()  # Display the thinking message
-                ai_move = get_best_move(self.game, ai_1)
+                ai_move = bot_1.get_best_move(self.game, ai_1)
                 pygame.time.delay(500)  # Wait for a short time to show the message
 
                 # Check if ai_move is valid (i.e., not None)

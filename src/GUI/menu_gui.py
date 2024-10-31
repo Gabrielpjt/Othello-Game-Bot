@@ -37,8 +37,8 @@ class Menu:
             "Minimax-1",
             "Minimax-2",
             "Minimax-3",
-            "Simulated-Annealing",
-            "Genetic-Algorithm"
+            "Simulated Annealing",
+            "Genetic Algorithm"
         ]
         self.return_button = None
         self.background_image = pygame.image.load(BACKGROUND_IMAGE_PATH)
