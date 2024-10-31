@@ -2,6 +2,10 @@ import pygame
 import sys
 from othello_game import OthelloGame
 from ai_agent import get_best_move
+from Stoppage import Stoppage
+import threading
+import time
+import random
 
 # Constants and colors
 WIDTH, HEIGHT = 480, 560
@@ -109,7 +113,7 @@ class OthelloGUI:
 
         pygame.display.update()
 
-    def handle_input(self):
+    def handle_input(self, stoppage=None):
         """
         Handle user input events such as mouse clicks and game quitting.
         """
@@ -128,22 +132,26 @@ class OthelloGUI:
                         ""  # Clear any previous invalid move message
                     )
                     self.flip_sound.play()  # Play flip sound effect
+                    if stoppage != None:
+                        stoppage.move = True
                 else:
                     self.invalid_move_message = "Invalid move! Try again."
                     self.invalid_play_sound.play()  # Play invalid play sound effect
 
-    def run_game(self, return_to_menu_callback=None):
+    def run_game(self, ai_1=None, ai_2=None, return_to_menu_callback=None):
       """
       Run the main game loop until the game is over and display the result.
       """
       while not self.game.is_game_over():
-          self.handle_input()
-
-          # If it's the AI player's turn
-          if self.game.player_mode == "ai" and self.game.current_player == -1:
+          
+          if ai_1!=None and ai_2!=None:
               self.message = "AI is thinking..."
               self.draw_board()  # Display the thinking message
-              ai_move = get_best_move(self.game)
+              if self.game.current_player != -1:
+                ai_move = get_best_move(self.game, ai_1)
+              else:
+                ai_move = get_best_move(self.game, ai_2)
+
               pygame.time.delay(500)  # Wait for a short time to show the message
 
               # Check if ai_move is valid (i.e., not None)
@@ -151,6 +159,36 @@ class OthelloGUI:
                   self.game.make_move(*ai_move)
               else:
                   self.message = "AI cannot make a move!"
+          else:     
+            self.draw_board()   
+            stoppage = Stoppage()
+            thread = threading.Thread(target=stoppage.startCount)
+
+            thread.start()
+            while True:
+                self.handle_input(stoppage)
+                time.sleep(0.1)
+                if stoppage.move == True:
+                    break
+                if stoppage.isStop():
+                    valid_moves = self.game.get_valid_moves()
+                    move = valid_moves[random.randint(0,100)%len(valid_moves)]
+                    self.game.make_move(move[0],move[1])
+                    break
+            thread.join()
+
+            # If it's the AI player's turn
+            if self.game.player_mode == "ai" and self.game.current_player == -1:
+                self.message = "AI is thinking..."
+                self.draw_board()  # Display the thinking message
+                ai_move = get_best_move(self.game, ai_1)
+                pygame.time.delay(500)  # Wait for a short time to show the message
+
+                # Check if ai_move is valid (i.e., not None)
+                if ai_move is not None:
+                    self.game.make_move(*ai_move)
+                else:
+                    self.message = "AI cannot make a move!"
 
           self.message = ""  # Clear any previous messages
           self.draw_board()
