@@ -3,6 +3,7 @@ import sys
 from othello_game import OthelloGame
 from ai_agent import ai_agent
 from ai_agent_genetic import ai_agent_genetic
+from ai_agent_localsearch import ai_agent_localsearch
 from Stoppage import Stoppage
 import threading
 import time
@@ -146,14 +147,14 @@ class OthelloGUI:
       if (ai_1=="Genetic Algorithm"):
           bot_1 = ai_agent_genetic()
       elif (ai_1=="Simulated Annealing"):
-          bot_1 = ai_agent_genetic()
+          bot_1 = ai_agent_localsearch()
       else:
           bot_1 = ai_agent()
 
       if (ai_2=="Genetic Algorithm"):
           bot_2 = ai_agent_genetic()
       elif (ai_2=="Simulated Annealing"):
-          bot_2 = ai_agent_genetic()
+          bot_2 = ai_agent_localsearch()
       else:
           bot_2 = ai_agent()
       while not self.game.is_game_over():
@@ -163,10 +164,8 @@ class OthelloGUI:
               self.draw_board()  # Display the thinking message
               if self.game.current_player != -1:
                 ai_move = bot_1.get_best_move(self.game, ai_1)
-                print(1)
               else:
                 ai_move = bot_2.get_best_move(self.game, ai_2)
-                print(2)
 
               pygame.time.delay(500)  # Wait for a short time to show the message
 
@@ -211,9 +210,9 @@ class OthelloGUI:
 
       winner = self.game.get_winner()
       if winner == 1:
-          self.message = "Black wins!"
+          self.message = ai_1+"wins!"
       elif winner == -1:
-          self.message = "White wins!"
+          self.message = ai_2+"wins!"
       else:
           self.message = "It's a tie!"
 

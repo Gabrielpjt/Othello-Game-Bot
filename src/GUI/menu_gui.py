@@ -134,6 +134,35 @@ class Menu:
         else:
             return button
     
+    def choose_ai_button(self, ai_number):
+
+        self.win.blit(self.background_image, (0, 0))  # Draw the background image
+        text = "choose AI-"+str(ai_number)
+        buttons = []
+        num_ai_options = 1
+        submenu_height = num_ai_options * SUBMENU_SPACING
+        submenu_top_margin = (HEIGHT - submenu_height) // 2
+
+        for i, item in enumerate([text]):
+            button_y = submenu_top_margin + i * SUBMENU_SPACING
+            button = Button(
+                WIDTH // 2, button_y, 200, 30, item, self.menu_font
+            )  # Adjust height to 30
+            buttons.append(button)
+            button.draw(self.win)
+
+        pygame.display.update()
+        button = self.handle_input_choose_ai(buttons)
+        if self.player_mode and self.player_mode == 'ai' :
+            othello_gui = OthelloGUI(player_mode='ai')
+            # Pass the draw_menu function as a callback to return to the main menu
+            othello_gui.run_game(
+                button,
+                return_to_menu_callback=self.draw_menu
+        )
+        else:
+            return button
+
     def handle_input_choose_ai(self, buttons):
         while True:
             for event in pygame.event.get():
@@ -207,11 +236,11 @@ class Menu:
         self.handle_input_credit()
 
     def choose_ai(self):
-        print(1)
+        self.choose_ai_button(ai_number=1)
         ai_1 = self.draw_ai_options()
+        self.choose_ai_button(ai_number=2)
         ai_2 = self.draw_ai_options()
         othello_gui = OthelloGUI(player_mode='ai')
-        print(ai_1, ai_2)
         othello_gui.run_game(
             ai_1,
             ai_2,
