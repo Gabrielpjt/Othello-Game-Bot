@@ -13,19 +13,19 @@ class ai_agent:
             "coin_parity_weight" : 1.0,
             "mobility_weight" : 2.0,
             "corner_weight" : 5.0,
-            "edge_weight" : 2.0
+            "edge_weight" : 3.0
         },
         "Minimax-2" : {
-            "coin_parity_weight" : 5.0,
-            "mobility_weight" : 10.0,
-            "corner_weight" : 1.0,
-            "edge_weight" : 0.5
+            "coin_parity_weight" : 1.0,
+            "mobility_weight" : 2.0,
+            "corner_weight" : 10.0,
+            "edge_weight" : 6.0
         },
         "Minimax-3" : {
             "coin_parity_weight" : 2.0,
-            "mobility_weight" : 1.0,
+            "mobility_weight" : 4.0,
             "corner_weight" : 5.0,
-            "edge_weight" : 5.0
+            "edge_weight" : 3.0
         }
     }
 
