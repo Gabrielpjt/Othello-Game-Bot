@@ -18,7 +18,7 @@ class ai_agent_localsearch:
         current_score = self.evaluate_game_state(game, current_move)
         T = 1.0 
         while T > 0:
-            T = self.scheduling_function(end_time = end_time, max_time = max_time) 
+            T = self.scheduling_function(end_time, max_time)
             if(T<=0):
                 break
             new_move = random.choice(game.get_valid_moves())
@@ -68,6 +68,7 @@ class ai_agent_localsearch:
             + edge_occupancy * edge_occupancy_weight
         )
         return evaluation
+    
     def calculate_stability(self, game):
         def neighbors(row, col):
             return [

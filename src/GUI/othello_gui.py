@@ -1,7 +1,7 @@
 import pygame
 import sys
 from othello_game import OthelloGame
-from ai_agent import ai_agent
+from ai_agent_alphabeta import ai_agent
 from ai_agent_genetic import ai_agent_genetic
 from ai_agent_localsearch import ai_agent_localsearch
 from Stoppage import Stoppage
@@ -157,10 +157,15 @@ class OthelloGUI:
           bot_2 = ai_agent_localsearch()
       else:
           bot_2 = ai_agent()
+
+      start_time = time.time()
+
       while not self.game.is_game_over():
           
           if ai_1!=None and ai_2!=None:
-              self.message = "AI is thinking..."
+              end_time = time.time()
+              elapsed_time = end_time - start_time
+              self.message = "AI is thinking...\ntime running "+str(elapsed_time)+" s"
               self.draw_board()  # Display the thinking message
               if self.game.current_player != -1:
                 ai_move = bot_1.get_best_move(self.game, ai_1)
@@ -190,11 +195,13 @@ class OthelloGUI:
                     move = valid_moves[random.randint(0,100)%len(valid_moves)]
                     self.game.make_move(move[0],move[1])
                     break
-            thread.join()
 
             # If it's the AI player's turn
             if self.game.player_mode == "ai" and self.game.current_player == -1:
-                self.message = "AI is thinking..."
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                self.message = "AI is thinking...\ntime running "+elapsed_time+" s"
+
                 self.draw_board()  # Display the thinking message
                 ai_move = bot_1.get_best_move(self.game, ai_1)
                 pygame.time.delay(500)  # Wait for a short time to show the message
@@ -210,9 +217,9 @@ class OthelloGUI:
 
       winner = self.game.get_winner()
       if winner == 1:
-          self.message = ai_1+"wins!"
+          self.message = ai_1+" black wins!" if ai_1 is not None and ai_2 is not None else "black wins!"
       elif winner == -1:
-          self.message = ai_2+"wins!"
+          self.message = ai_2+" white  wins!" if ai_1 is not None and ai_2 is not None else "white wins!"
       else:
           self.message = "It's a tie!"
 

@@ -1,6 +1,3 @@
-# This file has been modified by Tian Zheng for research purpose.
-# Constants and configuration options.
-
 EMPTY = 0
 BLACK = 1
 WHITE = 2
