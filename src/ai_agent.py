@@ -4,6 +4,12 @@ import threading
 import logging
 
 evaluation_params = {
+    "Genetic-Algorithm" : {
+        "coin_parity_weight" : 1.0,
+        "mobility_weight" : 2.0,
+        "corner_weight" : 5.0,
+        "edge_weight" : 2.0
+    },
     "Minimax-1" : {
         "coin_parity_weight" : 1.0,
         "mobility_weight" : 2.0,
@@ -34,7 +40,7 @@ def get_best_move(game, ai_agent_name ,max_depth=8):
 
     if not valid_moves:
         return None  # No valid moves available
-    
+
     stoppage = Stoppage()
     thread = threading.Thread(target=stoppage.startCount)
 
