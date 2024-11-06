@@ -14,6 +14,38 @@ class OthelloGame:
         self.current_player = 1
         self.player_mode = player_mode
 
+    def count_stones(self):
+        """Count the number of white, black, and empty stones on the board."""
+        whites = sum(row.count(1) for row in self.board)  # Count white stones
+        blacks = sum(row.count(-1) for row in self.board)  # Count black stones
+        empty = sum(row.count(0) for row in self.board)  # Count empty spaces
+        return whites, blacks, empty
+
+    def get_board(self):
+        return self.board  # Returns the current board state as a 2D list.
+
+    def compare(self, start_board):
+        """
+        Compare the current board with a start board.
+
+        Args:
+            start_board (list): The board to compare against, must be a 2D list.
+
+        Returns:
+            list: A list representing the changes (differences) between the two boards.
+        """
+        if not isinstance(start_board, list) or not all(isinstance(row, list) for row in start_board):
+            raise ValueError("start_board must be a 2D list representing the game board.")
+
+        changes = []
+        for r in range(8):
+            for c in range(8):
+                if self.board[r][c] != start_board[r][c]:
+                    changes.append((r, c))
+        return changes
+
+
+
     def is_valid_move(self, row, col):
       """
       Check if the move is valid and results in flipping opponent disks.
