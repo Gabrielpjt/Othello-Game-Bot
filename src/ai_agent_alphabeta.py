@@ -1,7 +1,6 @@
 from othello_game import OthelloGame
 from Stoppage import Stoppage
 import threading
-import logging
 
 class ai_agent:
 

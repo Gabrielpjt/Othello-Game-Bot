@@ -68,6 +68,7 @@ class ai_agent_localsearch:
             + edge_occupancy * edge_occupancy_weight
         )
         return evaluation
+    
     def calculate_stability(self, game):
         def neighbors(row, col):
             return [

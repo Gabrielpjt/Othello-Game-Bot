@@ -1,7 +1,7 @@
 import pygame
 import sys
 from othello_game import OthelloGame
-from ai_agent import ai_agent
+from ai_agent_alphabeta import ai_agent
 from ai_agent_genetic import ai_agent_genetic
 from ai_agent_localsearch import ai_agent_localsearch
 from Stoppage import Stoppage
