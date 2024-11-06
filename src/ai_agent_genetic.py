@@ -8,16 +8,12 @@ class ai_agent_genetic:
             pass
 
     def get_best_move(self, game, ai_agent_name, max_generations=50, population_size=20):
-        """
-        Given the current game state, this function returns the best move for the AI player using the Genetic Algorithm.
-        """
+
         _, best_move = self.genetic_algorithm(game, max_generations, population_size)
         return best_move
 
     def genetic_algorithm(self, game, max_generations, population_size):
-            """
-            Genetic algorithm for selecting the best move for the AI player.
-            """
+
             population = [random.choice(game.get_valid_moves()) for _ in range(population_size)]
 
             for generation in range(max_generations):
@@ -39,30 +35,20 @@ class ai_agent_genetic:
             return best_eval, best_move
 
     def evaluate_move(self, game, move):
-        """
-        Evaluates a move using the Evaluator class and returns a score.
-        """
-        # Create a new game instance to simulate the move
         new_game = OthelloGame(player_mode=game.player_mode)
-        new_game.board = [row[:] for row in game.board]  # Copy the current board
-        new_game.current_player = game.current_player  # Set the current player
-        new_game.make_move(*move)  # Make the move in the simulated game
+        new_game.board = [row[:] for row in game.board]
+        new_game.current_player = game.current_player
+        new_game.make_move(*move) 
 
         evaluator = Evaluator()
 
-        # Create a new board state for the evaluation
-        start_board = new_game.board  # Directly use the board's state
+        start_board = new_game.board 
 
-        # Get the current player and opponent
         player = new_game.current_player
         opponent = -player
 
-        # Evaluate the score using the evaluator
         return evaluator.score(start_board, new_game, currentDepth=0, player=player, opponent=opponent)
 
-
-
-    # Selection, crossover, and mutation functions remain the same as in your previous code.
     def selection(self, fitness_scores):
         fitness_scores.sort(key=lambda x: x[1], reverse=True)
         return [move for move, _ in fitness_scores[:len(fitness_scores)//2]]
@@ -76,44 +62,28 @@ class ai_agent_genetic:
 
     def mutate(self, move, game):
         valid_moves = game.get_valid_moves()
-        if random.random() < 0.1:  # 10% chance of mutation
+        if random.random() < 0.1:
             return random.choice(valid_moves)
         return move
 
     def evaluate_game_state(self, game):
-        """
-        Evaluates the current game state for the AI player.
-
-        Parameters:
-            game (OthelloGame): The current game state.
-
-        Returns:
-            float: The evaluation value representing the desirability of the game state for the AI player.
-        """
-        # Weights for various factors
         weights = self.dynamic_weights(len(game.get_valid_moves()))
 
-        # Coin parity (difference in disk count)
         player_disk_count = sum(row.count(game.current_player) for row in game.board)
         opponent_disk_count = sum(row.count(-game.current_player) for row in game.board)
         coin_parity = player_disk_count - opponent_disk_count
 
-        # Mobility (number of valid moves for the current player)
         player_valid_moves = len(game.get_valid_moves())
         opponent_valid_moves = len(OthelloGame(player_mode=-game.current_player).get_valid_moves())
         mobility = player_valid_moves - opponent_valid_moves
 
-        # Corner occupancy
         corner_occupancy = sum(game.board[i][j] == game.current_player for i, j in [(0, 0), (0, 7), (7, 0), (7, 7)])
 
-        # Stability
         stability = self.calculate_stability(game)
 
-        # Edge occupancy
         edge_occupancy = sum(game.board[i][j] == game.current_player for i in [0, 7] for j in range(1, 7)) + \
                         sum(game.board[i][j] == game.current_player for i in range(1, 7) for j in [0, 7])
 
-        # Final evaluation
         evaluation = (
             coin_parity * weights["coin_parity"] +
             mobility * weights["mobility"] +
@@ -125,9 +95,6 @@ class ai_agent_genetic:
         return evaluation
 
     def calculate_stability(self, game):
-        """
-        Calculate the number of stable pieces on the board.
-        """
         def neighbors(row, col):
             return [
                 (row + dr, col + dc)
@@ -146,9 +113,6 @@ class ai_agent_genetic:
         return stable_count
 
     def dynamic_weights(self, num_moves_left):
-        """
-        Adjusts weights dynamically based on the game phase.
-        """
         if num_moves_left > 40:
             return {"coin_parity": 1.0, "mobility": 3.0, "corner_occupancy": 5.0, "stability": 2.0, "edge_occupancy": 2.0}
         elif num_moves_left > 20:
