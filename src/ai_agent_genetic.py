@@ -1,4 +1,5 @@
 from othello_game import OthelloGame
+from evaluator import Evaluator
 import random
 
 class ai_agent_genetic:
