@@ -8,7 +8,7 @@ class ai_agent_localsearch:
     def __init__(self) -> None:
         pass
 
-    def scheduling_function(end_time, max_time):
+    def scheduling_function(self, end_time, max_time):
         return (end_time - time.time()) / max_time
     
     def get_best_move(self, game, ai_agent_name, max_time=4):
