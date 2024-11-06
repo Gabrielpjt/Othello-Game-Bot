@@ -222,10 +222,18 @@ class OthelloGUI:
           self.message = ai_2+" white  wins!" if ai_1 is not None and ai_2 is not None else "white wins!"
       else:
           self.message = "It's a tie!"
-
       self.draw_board()
       self.end_game_sound.play()  # Play end game sound effect
       pygame.time.delay(3000)  # Display the result for 2 seconds before returning
+      wait = True
+      while wait :
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                wait = False
 
       # Call the return_to_menu_callback if provided
       if return_to_menu_callback:
